@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Fruit Catcher Game</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+      font-family: Arial, sans-serif;
+      overflow: hidden;
+    }
+    #game-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      height: 600px;
+      border: 4px solid #555;
+      border-radius: 10px;
+      overflow: hidden;
+      background: url('https://images.unsplash.com/photo-1587374260480-0ef3d3e3c3e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') center/cover;
+      touch-action: none; /* Prevents default touch behaviors */
+    }
+    #basket {
+      position: absolute;
+      width: 100px;
+      height: 80px;
+      bottom: 10px;
+      left: 350px;
+      background: url('./eat.jpeg') center/contain no-repeat;
+      background-color: rgba(0, 0, 0, 0.3); /* Fallback if image fails */
+      border: 2px solid #000; /* Fallback visibility */
+    }
+    .fruit {
+      position: absolute;
+      width: 50px;
+      height: 50px;
+      background-size: contain;
+      background-repeat: no-repeat;
+    }
+    #lives {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      font-size: 24px;
+      color: white;
+      z-index: 10;
+    }
+    #score {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 24px;
+      color: white;
+      z-index: 10;
+    }
+    #game-over {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      font-size: 48px;
+      z-index: 20;
+    }
+    #game-over img {
+      width: 80%;
+      max-width: 400px;
+      margin-top: 20px;
+    }
+    #restart-btn {
+      margin-top: 30px;
+      padding: 10px 30px;
+      font-size: 24px;
+      background: #ff4444;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      touch-action: auto;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-container">
+    <div id="lives">❤️ ❤️ ❤️</div>
+    <div id="score">Score: 0</div>
+    <div id="basket"></div>
+    <div id="game-over">
+      <div>Game Over!</div>
+      <div style="font-size:32px; margin-top:10px;" id="final-score">Score: 0</div>
+      <img src="dead.jpeg" alt="Game Over">
+      <button id="restart-btn">Play Again</button>
+    </div>
+  </div>
+
+  <script>
+    const basket = document.getElementById('basket');
+    const gameContainer = document.getElementById('game-container');
+    const livesDisplay = document.getElementById('lives');
+    const scoreDisplay = document.getElementById('score');
+    const gameOverScreen = document.getElementById('game-over');
+    const finalScoreDisplay = document.getElementById('final-score');
+    const restartBtn = document.getElementById('restart-btn');
+
+    let lives = 3;
+    let score = 0;
+    let basketX = 350;
+    const fruits = [
+      'https://pngimg.com/uploads/apple/apple_PNG12433.png',
+      'https://pngimg.com/uploads/banana/banana_PNG851.png',
+      'https://pngimg.com/uploads/orange/orange_PNG805.png',
+      'https://pngimg.com/uploads/strawberry/strawberry_PNG2615.png',
+      'https://pngimg.com/uploads/watermelon/watermelon_PNG10165.png'
+    ];
+
+    // Check if basket image loads
+    const basketImg = new Image();
+    basketImg.src = 'https://www.pngall.com/wp-content/uploads/2016/04/Basket-PNG-Clipart.png';
+    basketImg.onload = () => console.log('Basket image loaded successfully');
+    basketImg.onerror = () => console.error('Failed to load basket image');
+
+    // Keyboard controls
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' && basketX > 0) {
+        basketX -= 20;
+      } else if (e.key === 'ArrowRight' && basketX < gameContainer.offsetWidth - 100) {
+        basketX += 20;
+      }
+      basket.style.left = basketX + 'px';
+    });
+
+    // Touch controls
+    let isTouching = false;
+    gameContainer.addEventListener('touchstart', (e) => {
+      isTouching = true;
+      moveBasketToTouch(e.touches[0]);
+    });
+    gameContainer.addEventListener('touchmove', (e) => {
+      e.preventDefault(); // Prevent scrolling
+      if (isTouching) {
+        moveBasketToTouch(e.touches[0]);
+      }
+    });
+    gameContainer.addEventListener('touchend', () => {
+      isTouching = false;
+    });
+
+    function moveBasketToTouch(touch) {
+      const containerRect = gameContainer.getBoundingClientRect();
+      const touchX = touch.clientX - containerRect.left; // Relative to container
+      basketX = touchX - 50; // Center basket on touch (basket width/2)
+      // Keep basket within bounds
+      if (basketX < 0) basketX = 0;
+      if (basketX > gameContainer.offsetWidth - 100) basketX = gameContainer.offsetWidth - 100;
+      basket.style.left = basketX + 'px';
+    }
+
+    // Create falling fruit
+    function createFruit() {
+      if (lives <= 0) return;
+
+      const fruit = document.createElement('div');
+      fruit.classList.add('fruit');
+      const randomFruit = fruits[Math.floor(Math.random() * fruits.length)];
+      fruit.style.backgroundImage = `url('${randomFruit}')`;
+      fruit.style.left = Math.random() * (gameContainer.offsetWidth - 50) + 'px';
+      fruit.style.top = '-60px';
+      gameContainer.appendChild(fruit);
+
+      let fallSpeed = 2 + Math.random() * 3;
+      let fallInterval = setInterval(() => {
+        let top = parseInt(fruit.style.top);
+        top += fallSpeed;
+        fruit.style.top = top + 'px';
+
+        // Check if caught
+        const basketRect = basket.getBoundingClientRect();
+        const fruitRect = fruit.getBoundingClientRect();
+
+        if (
+          fruitRect.bottom >= basketRect.top &&
+          fruitRect.top <= basketRect.bottom &&
+          fruitRect.right >= basketRect.left &&
+          fruitRect.left <= basketRect.right
+        ) {
+          score += 10;
+          scoreDisplay.textContent = `Score: ${score}`;
+          clearInterval(fallInterval);
+          fruit.remove();
+        }
+
+        // Check if missed
+        if (top > gameContainer.offsetHeight) {
+          lives--;
+          updateLives();
+          clearInterval(fallInterval);
+          fruit.remove();
+
+          if (lives <= 0) {
+            endGame();
+          }
+        }
+      }, 20);
+    }
+
+    function updateLives() {
+      let hearts = '';
+      for (let i = 0; i < lives; i++) {
+        hearts += '❤️ ';
+      }
+      livesDisplay.textContent = hearts.trim();
+    }
+
+    function endGame() {
+      gameOverScreen.style.display = 'flex';
+      finalScoreDisplay.textContent = `Score: ${score}`;
+    }
+
+    restartBtn.addEventListener('click', () => {
+      lives = 3;
+      score = 0;
+      updateLives();
+      scoreDisplay.textContent = 'Score: 0';
+      gameOverScreen.style.display = 'none';
+      document.querySelectorAll('.fruit').forEach(f => f.remove());
+      startSpawning();
+    });
+
+    function startSpawning() {
+      setInterval(createFruit, 1200);
+    }
+
+    // Start the game
+    startSpawning();
+  </script>
+</body>
+</html>
