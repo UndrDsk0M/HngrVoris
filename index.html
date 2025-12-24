@@ -188,8 +188,8 @@
       fruit.style.left = Math.random() * (gameContainer.offsetWidth - 50) + 'px';
       fruit.style.top = '-60px';
       gameContainer.appendChild(fruit);
-
-      let fallSpeed = 2 + Math.random() * 3;
+      let times = score / 50
+      let fallSpeed = 2 + Math.random() * 3 * times;
       let fallInterval = setInterval(() => {
         let top = parseInt(fruit.style.top);
         top += fallSpeed;
