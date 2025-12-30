@@ -186,7 +186,7 @@
 
     <!-- Main Menu -->
     <div id="main-menu" class="overlay">
-      <h1>🍎 Fruit Catcher 🍎</h1>
+      <h1>🍎 Hngr Voris 🍎</h1>
 
       <div class="input-group">
         <label for="player-name">Enter your name:</label><br>
@@ -258,7 +258,9 @@
     const missSound  = new Audio('miss.wav');
     const gameOverSound = new Audio('gameover.mp3');
     const bomb = new Audio('bomb.mp3');
-    const rock = new Audio('rock.mp3')
+    const rock = new Audio('rock.mp3');
+    const ahh = new Audio('ahh.mp3');
+
 
     catchSound.volume = 0.5;
     missSound.volume = 0.5;
@@ -324,6 +326,8 @@
       if (ag){
         bombImage = "18.png"
       }
+
+    
       const isBomb = Math.random() < 0.1;
       const item = document.createElement('div');
       item.classList.add('fruit');
@@ -358,8 +362,14 @@
           if (isBomb) {
             lives -= 1;
             updateLives();
-            bomb.currentTime = 0;
-            bomb.play();
+            if (isAdult){
+              ahh.currentTime = 0;
+              ahh.play();
+            }
+            else{
+              bomb.currentTime = 0;
+              bomb.play();
+            }
             if (lives === 0) endGame();
           } else {
             score += 10 + parseInt(score/10);
