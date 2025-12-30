@@ -336,7 +336,7 @@
 
       let times = (score <= 800) ? score / 100 : 8;
       let fallSpeed = 2 + 3 * times;
-      if (score > 800 && swich2==false ){
+      if (score > 2000 && swich2==false ){
         rock.currentTime = 0;
         rock.play()
         swich2 = true;
@@ -391,7 +391,7 @@
         livesDisplay.textContent = '❤️'.repeat(lives);
       }
     }
-    
+
 
     function endGame() {
       clearInterval(id);
