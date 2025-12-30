@@ -13,7 +13,7 @@
       justify-content: center;
       align-items: center;
       min-height: 100vh;
-      background: linear-gradient(to bottom, #87CEEB, #E0F7FA);
+      background: linear-gradient(to top, #ffffff, #456c69);
       font-family: Arial, sans-serif;
       overflow: hidden;
     }
@@ -25,8 +25,8 @@
       border: 4px solid #555;
       border-radius: 10px;
       overflow: hidden;
-      background: url('https://images.unsplash.com/photo-1587374260480-0ef3d3e3c3e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') center/cover;
-      touch-action: none; /* Prevents default touch behaviors */
+      background: url('https://images.unsplash.com/photo-1587374260480-0ef3d3e3c3e3c3e7?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') center/cover;
+      touch-action: none;
     }
     #basket {
       position: absolute;
@@ -36,8 +36,8 @@
       left: 350px;
       background: url('./eat.jpeg') center/contain no-repeat;
       background-size: 100% 100%;
-      background-color: rgba(0, 0, 0, 0.3); /* Fallback if image fails */
-      border: 2px solid #000; /* Fallback visibility */
+      background-color: rgba(0, 0, 0, 0.3);
+      border: 2px solid #000;
     }
     .fruit {
       position: absolute;
@@ -53,6 +53,7 @@
       font-size: 24px;
       color: white;
       z-index: 10;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
     #score {
       position: absolute;
@@ -61,6 +62,7 @@
       font-size: 24px;
       color: white;
       z-index: 10;
+      text-shadow: 2px 2px 4px rgba(0,0,0,0.8);
     }
     #game-over {
       position: absolute;
@@ -93,6 +95,87 @@
       cursor: pointer;
       touch-action: auto;
     }
+
+    /* Menu Styles */
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      color: white;
+      z-index: 30;
+      text-align: center;
+    }
+    #main-menu {
+      display: flex;
+    }
+    #settings {
+      display: none;
+      padding: 20px;
+      max-width: 90%;
+    }
+    #main-menu h1 {
+      font-size: 48px;
+      margin-bottom: 20px;
+      text-shadow: 3px 3px 6px black;
+    }
+    .menu-btn {
+      padding: 12px 30px;
+      font-size: 24px;
+      margin: 10px;
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .input-group {
+      margin: 20px 0;
+      font-size: 20px;
+    }
+    .input-group input[type="text"] {
+      padding: 10px;
+      font-size: 18px;
+      width: 250px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: none;
+    }
+    .checkbox-group {
+      margin: 30px 0;
+      font-size: 20px;
+    }
+    .checkbox-group label {
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+    }
+    .checkbox-group input[type="checkbox"] {
+      transform: scale(1.5);
+      margin-right: 10px;
+    }
+    .close-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: none;
+      border: none;
+      color: white;
+      font-size: 36px;
+      cursor: pointer;
+    }
+    #settings ul {
+      text-align: left;
+      font-size: 18px;
+      line-height: 1.6;
+      margin: 20px 0;
+    }
   </style>
 </head>
 <body>
@@ -100,6 +183,40 @@
     <div id="lives">❤️ ❤️ ❤️</div>
     <div id="score">Score: 0</div>
     <div id="basket"></div>
+
+    <!-- Main Menu -->
+    <div id="main-menu" class="overlay">
+      <h1>🍎 Fruit Catcher 🍎</h1>
+
+      <div class="input-group">
+        <label for="player-name">Enter your name:</label><br>
+        <input type="text" id="player-name" placeholder="Your name" maxlength="20">
+      </div>
+
+      <button class="menu-btn" id="start-btn">Start Game</button>
+      <button class="menu-btn" id="settings-btn">Settings</button>
+    </div>
+
+    <!-- Settings (replaces How to Play) -->
+    <div id="settings" class="overlay">
+      <button class="close-btn" id="close-settings">×</button>
+      <h2>Settings</h2>
+
+      <div class="checkbox-group">
+        <input type="checkbox" id="age-check">
+        <label for="age-check">I am older than 18</label>
+      </div>
+
+      <ul>
+        <li>Check the box above if you are 18 or older.</li>
+        <li>This setting is saved and can be used later in the game.</li>
+        <li>Other settings can be added here in the future.</li>
+      </ul>
+
+      <button class="menu-btn" id="back-btn">Back to Menu</button>
+    </div>
+
+    <!-- Game Over -->
     <div id="game-over">
       <div>Game Over!</div>
       <div style="font-size:32px; margin-top:10px;" id="final-score">Score: 0</div>
@@ -109,6 +226,7 @@
   </div>
 
   <script>
+    // Existing elements
     const basket = document.getElementById('basket');
     const gameContainer = document.getElementById('game-container');
     const livesDisplay = document.getElementById('lives');
@@ -116,27 +234,52 @@
     const gameOverScreen = document.getElementById('game-over');
     const finalScoreDisplay = document.getElementById('final-score');
     const restartBtn = document.getElementById('restart-btn');
+
+    // Menu elements
+    const mainMenu = document.getElementById('main-menu');
+    const settings = document.getElementById('settings');
+    const startBtn = document.getElementById('start-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const closeSettings = document.getElementById('close-settings');
+    const backBtn = document.getElementById('back-btn');
+
+    // Name input
+    const playerNameInput = document.getElementById('player-name');
+
+    // Age checkbox
+    const ageCheck = document.getElementById('age-check');
+
+    // Variables you can use later in the game
+    let playerName = '';
+    let isAdult = false; // This will be true if user checks "older than 18"
+
     // Sound effects
     const catchSound = new Audio('biting.wav');
     const missSound  = new Audio('miss.wav');
-    const gameOverSound = new Audio('gameover.wav');
+    const gameOverSound = new Audio('gameover.mp3');
+    const bomb = new Audio('bomb.mp3');
+    const rock = new Audio('rock.mp3')
 
-    // Optional: lower the volume a bit
     catchSound.volume = 0.5;
     missSound.volume = 0.5;
     gameOverSound.volume = 0.6;
 
     let lives = 3;
+    let swich = 0;
+    let swich2 = false;
     let score = 0;
     let basketX = 350;
+    let id;
     const fruits = [
       'https://pngimg.com/uploads/apple/apple_PNG12433.png',
       'https://pngimg.com/uploads/banana/banana_PNG851.png',
       'https://pngimg.com/uploads/orange/orange_PNG805.png',
       'https://pngimg.com/uploads/strawberry/strawberry_PNG2615.png',
     ];
+    let bombImage;
+    bombImage = 'https://www.pngall.com/wp-content/uploads/5/Bomb-PNG-Image.png';
 
-    // Keyboard controls
+    // Controls (unchanged)
     document.addEventListener('keydown', (e) => {
       if (e.key === 'ArrowLeft' && basketX > 0) {
         basketX -= 20;
@@ -146,14 +289,13 @@
       basket.style.left = basketX + 'px';
     });
 
-    // Touch controls
     let isTouching = false;
     gameContainer.addEventListener('touchstart', (e) => {
       isTouching = true;
       moveBasketToTouch(e.touches[0]);
     });
     gameContainer.addEventListener('touchmove', (e) => {
-      e.preventDefault(); // Prevent scrolling
+      e.preventDefault();
       if (isTouching) {
         moveBasketToTouch(e.touches[0]);
       }
@@ -164,40 +306,48 @@
 
     function moveBasketToTouch(touch) {
       const containerRect = gameContainer.getBoundingClientRect();
-      const touchX = touch.clientX - containerRect.left; // Relative to container
-      basketX = touchX - 50; // Center basket on touch (basket width/2)
-      // Keep basket within bounds
+      const touchX = touch.clientX - containerRect.left;
+      basketX = touchX - 50;
       if (basketX < 0) basketX = 0;
       if (basketX > gameContainer.offsetWidth - 100) basketX = gameContainer.offsetWidth - 100;
       basket.style.left = basketX + 'px';
     }
 
-    // Create falling fruit
     function createFruit() {
-      if (lives <= 0) {
-            gameOverSound.currentTime = 0;
-            gameOverSound.play();
-            return;
-            
-        }
+      if (lives <= 0 && swich > 3) {
+        gameOverSound.currentTime = 0;
+        gameOverSound.play();
+        swich += 1;
+        return;
+      }
+      ag = ageCheck.checked;
+      if (ag){
+        bombImage = "18.png"
+      }
+      const isBomb = Math.random() < 0.1;
+      const item = document.createElement('div');
+      item.classList.add('fruit');
+      item.style.backgroundImage = isBomb 
+        ? `url('${bombImage}')`
+        : `url('${fruits[Math.floor(Math.random() * fruits.length)]}')`;
+      item.style.left = Math.random() * (gameContainer.offsetWidth - 50) + 'px';
+      item.style.top = '-60px';
+      gameContainer.appendChild(item);
 
-      const fruit = document.createElement('div');
-      fruit.classList.add('fruit');
-      const randomFruit = fruits[Math.floor(Math.random() * fruits.length)];
-      fruit.style.backgroundImage = `url('${randomFruit}')`;
-      fruit.style.left = Math.random() * (gameContainer.offsetWidth - 50) + 'px';
-      fruit.style.top = '-60px';
-      gameContainer.appendChild(fruit);
-      let times = score / 50
-      let fallSpeed = 2 + Math.random() * 3 * times;
+      let times = (score <= 800) ? score / 100 : 8;
+      let fallSpeed = 2 + 3 * times;
+      if (score > 800 && swich2==false ){
+        rock.currentTime = 0;
+        rock.play()
+        swich2 = true;
+      }
       let fallInterval = setInterval(() => {
-        let top = parseInt(fruit.style.top);
+        let top = parseInt(item.style.top);
         top += fallSpeed;
-        fruit.style.top = top + 'px';
+        item.style.top = top + 'px';
 
-        // Check if caught
         const basketRect = basket.getBoundingClientRect();
-        const fruitRect = fruit.getBoundingClientRect();
+        const fruitRect = item.getBoundingClientRect();
 
         if (
           fruitRect.bottom >= basketRect.top &&
@@ -205,59 +355,101 @@
           fruitRect.right >= basketRect.left &&
           fruitRect.left <= basketRect.right
         ) {
-          catchSound.currentTime = 0;
-          catchSound.play();
-          score += 10;
+          if (isBomb) {
+            lives -= 1;
+            updateLives();
+            bomb.currentTime = 0;
+            bomb.play();
+            if (lives === 0) endGame();
+          } else {
+            score += 10 + parseInt(score/10);
+            catchSound.currentTime = 0;
+            catchSound.play();
+          }
           scoreDisplay.textContent = `Score: ${score}`;
           clearInterval(fallInterval);
-          fruit.remove();
+          item.remove();
+          return;
         }
 
-        // Check if missed
         if (top > gameContainer.offsetHeight) {
+          if (!isBomb) {
+            lives--;
+            updateLives();
             missSound.currentTime = 0;
-            missSound.play();   
-          lives--;
-          updateLives();
-          clearInterval(fallInterval);
-          fruit.remove();
-
-          if (lives <= 0) {
-            endGame();
+            missSound.play();
           }
+          clearInterval(fallInterval);
+          item.remove();
+          if (lives <= 0) endGame();
         }
       }, 20);
     }
 
     function updateLives() {
-      let hearts = '';
-      for (let i = 0; i < lives; i++) {
-        hearts += '❤️ ';
+      if (lives >0){
+        livesDisplay.textContent = '❤️'.repeat(lives);
       }
-      livesDisplay.textContent = hearts.trim();
     }
 
     function endGame() {
+      clearInterval(id);
+      gameOverSound.currentTime = 0;
+      gameOverSound.play();
       gameOverScreen.style.display = 'flex';
-      finalScoreDisplay.textContent = `Score: ${score}`;
+      finalScoreDisplay.textContent = `${playerName} - Score: ${score}`;
     }
 
+    function startSpawning() {
+      id = setInterval(createFruit, 1000);
+    }
+
+    // Start Game
+    function startGame() {
+      playerName = playerNameInput.value.trim() || 'Player';
+      isAdult = ageCheck.checked; // Save the boolean value
+
+      mainMenu.style.display = 'none';
+      settings.style.display = 'none';
+
+      lives = 3;
+      score = 0;
+      swich = 0;
+      updateLives();
+      scoreDisplay.textContent = 'Score: 0';
+      document.querySelectorAll('.fruit').forEach(f => f.remove());
+      startSpawning();
+    }
+
+    startBtn.addEventListener('click', startGame);
+
+    // Settings navigation
+    settingsBtn.addEventListener('click', () => {
+      mainMenu.style.display = 'none';
+      settings.style.display = 'flex';
+    });
+
+    closeSettings.addEventListener('click', () => {
+      settings.style.display = 'none';
+      mainMenu.style.display = 'flex';
+    });
+
+    backBtn.addEventListener('click', () => {
+      settings.style.display = 'none';
+      mainMenu.style.display = 'flex';
+    });
+
+    // Restart button
     restartBtn.addEventListener('click', () => {
       lives = 3;
       score = 0;
+      swich = 0;
       updateLives();
       scoreDisplay.textContent = 'Score: 0';
       gameOverScreen.style.display = 'none';
       document.querySelectorAll('.fruit').forEach(f => f.remove());
       startSpawning();
     });
-
-    function startSpawning() {
-      setInterval(createFruit, 1200);
-    }
-
-    // Start the game
-    startSpawning();
   </script>
 </body>
 </html>
