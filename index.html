@@ -170,12 +170,43 @@
       font-size: 36px;
       cursor: pointer;
     }
+    .stng{
+      right: 0px;
+      top: 0px;
+      position: absolute;
+      background: none;
+    }
     #settings ul {
       text-align: left;
       font-size: 18px;
       line-height: 1.6;
       margin: 20px 0;
     }
+
+    .leaderboard-table th,
+    .leaderboard-table td {
+      padding: 12px 15px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .leaderboard-table th {
+      background: rgba(255,255,255,0.1);
+      font-size: 20px;
+    }
+    .leaderboard-table tr:last-child td {
+      border-bottom: none;
+    }
+    .rank {
+      font-weight: bold;
+      font-size: 20px;
+      width: 60px;
+    }
+    .no-scores {
+      font-style: italic;
+      color: #ccc;
+      margin: 20px 0;
+    }
+
   </style>
 </head>
 <body>
@@ -194,7 +225,24 @@
       </div>
 
       <button class="menu-btn" id="start-btn">Start Game</button>
-      <button class="menu-btn" id="settings-btn">Settings</button>
+      <button class="menu-btn stng" id="settings-btn">⚙️</button>
+      <div id="leaderboard">
+      <h2>🏆 Leaderboard 🏆</h2>
+
+       <table class="leaderboard-table" id="lb-table">
+         <thead>
+            <tr>
+              <th class="rank">Rank</th>
+              <th>Name</th>
+              <th>Score</th>
+            </tr>
+          </thead>
+         <tbody id="lb-body">
+          <!-- Filled by JavaScript -->
+          </tbody>
+        </table>
+        </div>
+
     </div>
 
     <!-- Settings (replaces How to Play) -->
@@ -261,6 +309,42 @@
     const rock = new Audio('rock.mp3');
     const ahh = new Audio('ahh.mp3');
 
+    // NEW: Background music tracks
+    const bk1 = new Audio('bk1.mp3');  // score < 800
+    const bk2 = new Audio('bk2.mp3');  // 800 <= score < 1600
+    const bk3 = new Audio('bk3.mp3');  // score >= 1600
+
+    bk1.loop = true;
+    bk2.loop = true;
+    bk3.loop = true;
+    bk1.volume = 0.4;
+    bk2.volume = 0.4;
+    bk3.volume = 0.4;
+
+    let currentBg = null; // will hold the currently playing track
+
+    // Function to switch background music based on current score
+    function updateBackgroundMusic() {
+      let targetTrack = null;
+
+      if (score < 800) {
+        targetTrack = bk1;
+      } else if (score < 5000) {
+        targetTrack = bk2;
+      } else {
+        targetTrack = bk3;
+      }
+
+      if (currentBg !== targetTrack) {
+        if (currentBg) {
+          currentBg.pause();
+          currentBg.currentTime = 0;
+        }
+        currentBg = targetTrack;
+        currentBg.volume = 0.1;
+        currentBg.play().catch(e => console.log("Background music play blocked:", e));
+      }
+    }
 
     catchSound.volume = 0.5;
     missSound.volume = 0.5;
@@ -375,6 +459,9 @@
             score += 10 + parseInt(score/10);
             catchSound.currentTime = 0;
             catchSound.play();
+
+            // Update background music after catching fruit
+            updateBackgroundMusic();
           }
           scoreDisplay.textContent = `Score: ${score}`;
           clearInterval(fallInterval);
@@ -407,6 +494,11 @@
       clearInterval(id);
       gameOverSound.currentTime = 0;
       gameOverSound.play();
+      // Stop background music
+      if (currentBg) {
+        currentBg.pause();
+        currentBg.currentTime = 0;
+      }
       gameOverScreen.style.display = 'flex';
       finalScoreDisplay.textContent = `${playerName} - Score: ${score}`;
     }
@@ -426,9 +518,16 @@
       lives = 3;
       score = 0;
       swich = 0;
+      swich2 = false;
       updateLives();
       scoreDisplay.textContent = 'Score: 0';
       document.querySelectorAll('.fruit').forEach(f => f.remove());
+
+      // Start first background song (bk1)
+      currentBg = bk1;
+      bk1.currentTime = 0;
+      bk1.play().catch(e => console.log("Music start blocked (needs user interaction):", e));
+
       startSpawning();
     }
 
@@ -455,10 +554,21 @@
       lives = 3;
       score = 0;
       swich = 0;
+      swich2 = false;
       updateLives();
       scoreDisplay.textContent = 'Score: 0';
       gameOverScreen.style.display = 'none';
       document.querySelectorAll('.fruit').forEach(f => f.remove());
+
+      // Restart background music with bk1
+      if (currentBg) {
+        currentBg.pause();
+        currentBg.currentTime = 0;
+      }
+      currentBg = bk1;
+      bk1.currentTime = 0;
+      bk1.play().catch(e => console.log("Music restart blocked:", e));
+
       startSpawning();
     });
   </script>
