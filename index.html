@@ -175,6 +175,10 @@
       top: 0px;
       position: absolute;
       background: none;
+      transition: all 0.4s ease; /* Smooth rotation + opacity */
+      opacity: 0.9;
+      cursor: pointer;
+      padding: 10px;
     }
     #settings ul {
       text-align: left;
@@ -182,31 +186,78 @@
       line-height: 1.6;
       margin: 20px 0;
     }
-
+  .stng:hover{
+  opacity: 1;
+  transform: rotate(90deg); /* Full 90-degree spin on hover */
+}
+  .stng:active {
+    transform: rotate(90deg) scale(0.95);
+  }
+/* Leaderboard inside main menu - fixed at bottom, scrollable */
+    #main-leaderboard {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 85%;
+      max-width: 550px;
+      max-height: 35vh;
+      background: rgba(0,0,0,0.5);
+      border-radius: 10px;
+      padding: 15px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      overflow: hidden;
+      height: 25%;
+    }
+    #main-leaderboard h3 {
+      margin: 0 0 10px 0;
+      font-size: 24px;
+      text-align: center;
+    }
+    .lb-scroll {
+      max-height: 28vh;
+      overflow-y: auto;
+      padding-right: 5px;
+      padding-bottom: 600px;
+    }
+    .leaderboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 16px;
+    }
     .leaderboard-table th,
     .leaderboard-table td {
-      padding: 12px 15px;
+      padding: 8px 10px;
       text-align: left;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
+      border-bottom: 1px solid rgba(255,255,255,0.15);
     }
     .leaderboard-table th {
       background: rgba(255,255,255,0.1);
-      font-size: 20px;
-    }
-    .leaderboard-table tr:last-child td {
-      border-bottom: none;
+      font-size: 16px;
     }
     .rank {
       font-weight: bold;
-      font-size: 20px;
-      width: 60px;
+      width: 50px;
     }
     .no-scores {
       font-style: italic;
-      color: #ccc;
-      margin: 20px 0;
+      color: #aaa;
+      text-align: center;
+      padding: 20px 0;
     }
-
+    /* Custom scrollbar for leaderboard */
+    .lb-scroll::-webkit-scrollbar {
+      width: 8px;
+      
+    }
+    .lb-scroll::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.1);
+      border-radius: 10px;
+    }
+    .lb-scroll::-webkit-scrollbar-thumb {
+      background: #4CAF50;
+      border-radius: 10px;
+    }
   </style>
 </head>
 <body>
@@ -216,6 +267,7 @@
     <div id="basket"></div>
 
     <!-- Main Menu -->
+<!-- Main Menu -->
     <div id="main-menu" class="overlay">
       <h1>🍎 Hngr Voris 🍎</h1>
 
@@ -224,30 +276,33 @@
         <input type="text" id="player-name" placeholder="Your name" maxlength="20">
       </div>
 
-      <button class="menu-btn" id="start-btn">Start Game</button>
-      <button class="menu-btn stng" id="settings-btn">⚙️</button>
-      <div id="leaderboard">
-      <h2>🏆 Leaderboard 🏆</h2>
+      <button style="margin-bottom: 20vh;" class="menu-btn" id="start-btn">Start Game</button>
 
-       <table class="leaderboard-table" id="lb-table">
-         <thead>
-            <tr>
-              <th class="rank">Rank</th>
-              <th>Name</th>
-              <th>Score</th>
-            </tr>
-          </thead>
-         <tbody id="lb-body">
-          <!-- Filled by JavaScript -->
-          </tbody>
-        </table>
+      <!-- Settings gear -->
+      <button class="stng menu-btn" id="settings-btn" title="Settings">⚙️</button>
+
+      <!-- Leaderboard fixed at bottom of main menu -->
+      <div id="main-leaderboard">
+        <h3>🏆 Top Scores 🏆</h3>
+        <div class="lb-scroll">
+          <table class="leaderboard-table">
+            <thead>
+              <tr>
+                <th class="rank">Rank</th>
+                <th>Name</th>
+                <th>Score</th>
+                <th>Date</th>
+              </tr>
+            </thead>
+            <tbody id="lb-body"></tbody>
+          </table>
+          <p class="no-scores" id="no-scores-msg">Loading...</p>
         </div>
-
+      </div>
     </div>
-
     <!-- Settings (replaces How to Play) -->
     <div id="settings" class="overlay">
-      <button class="close-btn" id="close-settings">×</button>
+      <button class="close-btn" id="close-settings" title="X">❌</button>
       <h2>Settings</h2>
 
       <div class="checkbox-group">
@@ -291,6 +346,9 @@
     const closeSettings = document.getElementById('close-settings');
     const backBtn = document.getElementById('back-btn');
 
+    const lbBody = document.getElementById('lb-body');
+    const noScoresMsg = document.getElementById('no-scores-msg');
+
     // Name input
     const playerNameInput = document.getElementById('player-name');
 
@@ -306,14 +364,21 @@
     const missSound  = new Audio('miss.wav');
     const gameOverSound = new Audio('gameover.mp3');
     const bomb = new Audio('bomb.mp3');
-    const rock = new Audio('rock.mp3');
     const ahh = new Audio('ahh.mp3');
+
+    [catchSound, missSound, gameOverSound, bomb, ahh].forEach(sound => {
+    sound.preload = 'auto';
+   });
 
     // NEW: Background music tracks
     const bk1 = new Audio('bk1.mp3');  // score < 800
     const bk2 = new Audio('bk2.mp3');  // 800 <= score < 1600
     const bk3 = new Audio('bk3.mp3');  // score >= 1600
 
+
+    bk1.preload = 'auto';
+    bk2.preload = 'auto';
+    bk3.preload = 'auto';
     bk1.loop = true;
     bk2.loop = true;
     bk3.loop = true;
@@ -322,6 +387,15 @@
     bk3.volume = 0.4;
 
     let currentBg = null; // will hold the currently playing track
+
+// Auto-fill name from localStorage
+    window.addEventListener('load', () => {
+      const savedName = localStorage.getItem('hngrVorisPlayerName');
+      loadLeaderboard();
+      if (savedName) {
+        playerNameInput.value = savedName;
+      }
+    });
 
     // Function to switch background music based on current score
     function updateBackgroundMusic() {
@@ -398,6 +472,42 @@
       if (basketX > gameContainer.offsetWidth - 100) basketX = gameContainer.offsetWidth - 100;
       basket.style.left = basketX + 'px';
     }
+    async function loadLeaderboard() {
+      noScoresMsg.textContent = 'Loading...';
+      noScoresMsg.style.display = 'block';
+      lbBody.innerHTML = '';
+
+      try {
+        const response = await fetch('https://undrdsk0m2.pythonanywhere.com/');
+        if (!response.ok) throw new Error('Network error');
+        const data = await response.json();
+
+        if (data.length === 0) {
+          noScoresMsg.textContent = 'No scores yet! Be the first!';
+          return;
+        }
+
+        // Sort by score descending
+        data.sort((a, b) => parseInt(b.score) - parseInt(a.score));
+
+        data.forEach((entry, index) => {
+          const row = document.createElement('tr');
+          
+          row.innerHTML = `
+            <td class="rank">${index + 1}</td>
+            <td>${entry.name}</td>
+            <td>${entry.score}</td>
+            <td>${entry.date}</td>
+          `;
+          lbBody.appendChild(row);
+        });
+        console.log(data);
+        noScoresMsg.style.display = 'none';
+      } catch (err) {
+        noScoresMsg.textContent = 'Failed to load leaderboard (API offline)';
+        console.error(err);
+      }
+    }
 
     function createFruit() {
       if (lives <= 0 && swich > 3) {
@@ -424,11 +534,11 @@
 
       let times = (score <= 800) ? score / 100 : 8;
       let fallSpeed = 2 + 3 * times;
-      if (score > 2000 && swich2==false ){
-        rock.currentTime = 0;
-        rock.play()
-        swich2 = true;
-      }
+      // if (score > 2000 && swich2==false ){
+      //   rock.currentTime = 0;
+      //   rock.play()
+      //   swich2 = true;
+      // }
       let fallInterval = setInterval(() => {
         let top = parseInt(item.style.top);
         top += fallSpeed;
@@ -489,6 +599,41 @@
       }
     }
 
+    async function loadLeaderboard() {
+      noScoresMsg.textContent = 'Loading...';
+      noScoresMsg.style.display = 'block';
+      lbBody.innerHTML = '';
+
+      try {
+        const response = await fetch('https://undrdsk0m2.pythonanywhere.com/');
+        if (!response.ok) throw new Error('Network error');
+        const data = await response.json();
+
+        if (data.length === 0) {
+          noScoresMsg.textContent = 'No scores yet! Be the first!';
+          return;
+        }
+
+        // Sort by score descending
+        data.sort((a, b) => parseInt(b.score) - parseInt(a.score));
+
+        data.forEach((entry, index) => {
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td class="rank">${index + 1}</td>
+            <td>${entry.name}</td>
+            <td>${entry.score}</td>
+            <td>${entry.date}</td>
+          `;
+          lbBody.appendChild(row);
+        });
+
+        noScoresMsg.style.display = 'none';
+      } catch (err) {
+        noScoresMsg.textContent = 'Failed to load leaderboard (API offline)';
+        console.error(err);
+      }
+    }
 
     function endGame() {
       clearInterval(id);
@@ -501,6 +646,19 @@
       }
       gameOverScreen.style.display = 'flex';
       finalScoreDisplay.textContent = `${playerName} - Score: ${score}`;
+      localStorage.setItem('hngrVorisPlayerName', playerName);
+
+      fetch('https://undrdsk0m2.pythonanywhere.com/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name: playerName, score: score })
+        })
+        .then(response => {
+          if (!response.ok) throw new Error('API response not ok');
+          console.log('Score submitted successfully');
+        })
+        .catch(err => console.error('Failed to post score:', err));
+  
     }
 
     function startSpawning() {
