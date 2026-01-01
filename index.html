@@ -534,11 +534,10 @@
 
       let times = (score <= 800) ? score / 100 : 8;
       let fallSpeed = 2 + 3 * times;
-      // if (score > 2000 && swich2==false ){
-      //   rock.currentTime = 0;
-      //   rock.play()
-      //   swich2 = true;
-      // }
+      if (score > 500 && swich2==false ){
+        clearInterval(id);
+        id = setInterval(createFruit, 600);
+      }
       let fallInterval = setInterval(() => {
         let top = parseInt(item.style.top);
         top += fallSpeed;
@@ -566,7 +565,7 @@
             }
             if (lives === 0) endGame();
           } else {
-            score += 10 + parseInt(score/10);
+            score += 10 + parseInt(score/100);
             catchSound.currentTime = 0;
             catchSound.play();
 
