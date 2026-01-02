@@ -206,7 +206,6 @@
       border-radius: 10px;
       padding: 15px;
       box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-      overflow: hidden;
       height: 25%;
     }
     #main-leaderboard h3 {
@@ -218,7 +217,6 @@
       max-height: 28vh;
       overflow-y: auto;
       padding-right: 5px;
-      padding-bottom: 600px;
     }
     .leaderboard-table {
       width: 100%;
@@ -258,6 +256,34 @@
       background: #4CAF50;
       border-radius: 10px;
     }
+    /* Bomb glow/backlight effect */
+.fruit.bomb {
+  animation: bombGlow 1.5s ease-in-out infinite alternate;
+  filter: brightness(1.2); /* Makes it pop a bit more */
+}
+
+@keyframes bombGlow {
+  from {
+    box-shadow: 0 0 10px 5px rgba(255, 0, 0, 0.6);
+  }
+  to {
+    box-shadow: 0 0 20px 10px rgba(255, 100, 0, 0.8);
+  }
+}
+
+/* Optional: stronger glow for adult mode bomb (18.png) */
+.fruit.bomb.adult {
+  animation: adultBombGlow 1.2s ease-in-out infinite alternate;
+}
+
+@keyframes adultBombGlow {
+  from {
+    box-shadow: 0 0 15px 8px rgba(255, 20, 20, 0.8);
+  }
+  to {
+    box-shadow: 0 0 30px 15px rgba(255, 140, 0, 1);
+  }
+}
   </style>
 </head>
 <body>
@@ -403,7 +429,7 @@
 
       if (score < 800) {
         targetTrack = bk1;
-      } else if (score < 5000) {
+      } else if (score < 2000) {
         targetTrack = bk2;
       } else {
         targetTrack = bk3;
@@ -525,6 +551,12 @@
       const isBomb = Math.random() < 0.1;
       const item = document.createElement('div');
       item.classList.add('fruit');
+      if (isBomb) {
+        item.classList.add('bomb');
+        if (isAdult) {
+          item.classList.add('adult'); // for special glow on 18.png
+        }
+      }
       item.style.backgroundImage = isBomb 
         ? `url('${bombImage}')`
         : `url('${fruits[Math.floor(Math.random() * fruits.length)]}')`;
