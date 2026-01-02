@@ -284,6 +284,16 @@
     box-shadow: 0 0 30px 15px rgba(255, 140, 0, 1);
   }
 }
+
+.clickable:hover {
+  background: rgba(255,255,255,0.2);
+  transform: scale(1.03);             /* Slight grow on hover */
+}
+
+.clickable:active {
+  transform: scale(0.98);             /* Press effect */
+}
+
   </style>
 </head>
 <body>
@@ -308,7 +318,7 @@
       <button class="stng menu-btn" id="settings-btn" title="Settings">⚙️</button>
 
       <!-- Leaderboard fixed at bottom of main menu -->
-      <div id="main-leaderboard">
+      <div class="clickable" id="main-leaderboard" style="cursor: pointer;">
         <h3>🏆 Top Scores 🏆</h3>
         <div class="lb-scroll">
           <table class="leaderboard-table">
@@ -354,6 +364,8 @@
     </div>
   </div>
 
+  
+
   <script>
     // Existing elements
     const basket = document.getElementById('basket');
@@ -380,6 +392,8 @@
 
     // Age checkbox
     const ageCheck = document.getElementById('age-check');
+
+
 
     // Variables you can use later in the game
     let playerName = '';
@@ -498,42 +512,6 @@
       if (basketX > gameContainer.offsetWidth - 100) basketX = gameContainer.offsetWidth - 100;
       basket.style.left = basketX + 'px';
     }
-    async function loadLeaderboard() {
-      noScoresMsg.textContent = 'Loading...';
-      noScoresMsg.style.display = 'block';
-      lbBody.innerHTML = '';
-
-      try {
-        const response = await fetch('https://undrdsk0m2.pythonanywhere.com/');
-        if (!response.ok) throw new Error('Network error');
-        const data = await response.json();
-
-        if (data.length === 0) {
-          noScoresMsg.textContent = 'No scores yet! Be the first!';
-          return;
-        }
-
-        // Sort by score descending
-        data.sort((a, b) => parseInt(b.score) - parseInt(a.score));
-
-        data.forEach((entry, index) => {
-          const row = document.createElement('tr');
-          
-          row.innerHTML = `
-            <td class="rank">${index + 1}</td>
-            <td>${entry.name}</td>
-            <td>${entry.score}</td>
-            <td>${entry.date}</td>
-          `;
-          lbBody.appendChild(row);
-        });
-        console.log(data);
-        noScoresMsg.style.display = 'none';
-      } catch (err) {
-        noScoresMsg.textContent = 'Failed to load leaderboard (API offline)';
-        console.error(err);
-      }
-    }
 
     function createFruit() {
       if (lives <= 0 && swich > 3) {
@@ -624,12 +602,24 @@
       }, 20);
     }
 
+
     function updateLives() {
       if (lives >0){
         livesDisplay.textContent = '❤️'.repeat(lives);
       }
     }
 
+    function leaderboardpage() {
+      window.location.href = 'leaderboard.html';
+    }
+
+    document.querySelectorAll('.clickable').forEach(el => {
+      el.addEventListener('click', () => {
+        leaderboardpage();
+      });
+    });
+
+    
     async function loadLeaderboard() {
       noScoresMsg.textContent = 'Loading...';
       noScoresMsg.style.display = 'block';
@@ -647,8 +637,9 @@
 
         // Sort by score descending
         data.sort((a, b) => parseInt(b.score) - parseInt(a.score));
-
-        data.forEach((entry, index) => {
+        data2 = data.slice(0, 3); // Top 10 scores
+        console.log(data2);
+        data2.forEach((entry, index) => {
           const row = document.createElement('tr');
           row.innerHTML = `
             <td class="rank">${index + 1}</td>
@@ -698,7 +689,7 @@
 
     // Start Game
     function startGame() {
-      playerName = playerNameInput.value.trim() || 'Player';
+      playerName = playerNameInput.value.trim() || 'Guest';
       isAdult = ageCheck.checked; // Save the boolean value
 
       mainMenu.style.display = 'none';
